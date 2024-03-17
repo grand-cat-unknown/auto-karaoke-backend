@@ -15,7 +15,7 @@ s3 = boto3.client('s3', aws_access_key_id=os.environ.get('AWS_S3_ACCESS_ID'), aw
 class RunPodServerlessEndpoint:
     def __init__(self, endpoint_url):
         self.api_key = os.getenv("RUNPOD_API")
-        self.url = f"https://api.runpod.ai/v2/{endpoint_url}/runsync"
+        self.url = f"https://api.runpod.ai/v2/{endpoint_url}/run"
 
     def run(self, payload):
         headers = {
@@ -77,10 +77,12 @@ def lambda_handler(event, context):
     print("Splitting audio")
     spleeter_endpoint = RunPodServerlessEndpoint(os.environ.get("SPLEETER_ENDPOINT_ID"))
     spleeter_response = spleeter_endpoint.run(payload)
+    print(spleeter_response)
 
     print("Vocals to text")
     whisper_endpoint = RunPodServerlessEndpoint(os.environ.get("WHISPER_ENDPOINT_ID"))
     whipser_response = whisper_endpoint.run(payload)
+    print(whipser_response)
 
     return {"title": "HOLA  " + song_name}
 
