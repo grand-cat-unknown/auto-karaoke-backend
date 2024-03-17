@@ -7,8 +7,13 @@ WORKDIR /app
 # Copy the local Lambda function code to the container
 COPY . /app
 
-# Install any dependencies
+# Install any dependencies, including lxml
+RUN apt-get update && apt-get install -y libxml2-dev libxslt-dev
 RUN pip install -r requirements.txt
+
+# Install lxml from precompiled binaries
+RUN mkdir -p /opt/python
+COPY lxml_amazon_binaries /opt/python/lxml
 
 # Command to run your Lambda function
 CMD ["python", "lambda_function.py"]

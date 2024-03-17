@@ -7,7 +7,6 @@ from pytube import YouTube
 from lyrics_extractor import SongLyrics
 import boto3
 import requests
-# from lxml import etree
 
 load_dotenv()
 
@@ -67,7 +66,7 @@ def lambda_handler(event, context):
     song_name = youtube2mp3(url,output_dir)
 
     # print("Extracting lyrics")
-    # lyrics = lyrics_extractor(song_name)
+    lyrics = lyrics_extractor(song_name)
     
     payload = {
         "input": {
@@ -83,7 +82,7 @@ def lambda_handler(event, context):
     whisper_endpoint = RunPodServerlessEndpoint(os.environ.get("WHISPER_ENDPOINT_ID"))
     whipser_response = whisper_endpoint.run(payload)
 
-    return {"title": song_name}
+    return {"title": "HOLA  " + song_name}
 
 if __name__ == "__main__":
     # load test.json
