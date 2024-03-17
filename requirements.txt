@@ -1,0 +1,7 @@
+pytube
+youtube_dl
+python-dotenv
+lyrics-extractor@git+https://github.com/grand-cat-unknown/PyLyrics-Extractor.git
+boto3
+youtube-search-python
+# lxml
