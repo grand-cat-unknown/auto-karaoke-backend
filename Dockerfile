@@ -15,7 +15,7 @@ RUN pip install -r requirements.txt
 RUN mkdir -p /opt/python/lxml
 
 # Copy the contents of lxml_amazon_binaries to the container
-COPY lxml_amazon_binaries /opt/python/lxml/
+COPY ./lxml_amazon_binaries /opt/python/lxml/
 
 # Command to run your Lambda function
 CMD ["python", "lambda_function.py"]
