@@ -11,11 +11,8 @@ COPY . /app
 RUN apt-get update && apt-get install -y libxml2-dev libxslt-dev
 RUN pip install -r requirements.txt
 
-# Create a directory for lxml installation
-RUN mkdir -p /opt/python/lxml
-
-# Copy the contents of lxml_amazon_binaries to the container
-COPY ./lxml_amazon_binaries /opt/python/lxml/
+# Install lxml from precompiled binaries within the Docker container
+RUN pip install lxml -t /app
 
 # Command to run your Lambda function
 CMD ["python", "lambda_function.py"]
