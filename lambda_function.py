@@ -12,10 +12,24 @@ load_dotenv()
 
 s3 = boto3.client('s3', aws_access_key_id=os.environ.get('AWS_S3_ACCESS_ID'), aws_secret_access_key=os.environ.get('AWS_S3_ACCESS_KEY'))
 
-class RunPodServerlessEndpoint:
+class RunPodServerlessEndpointSync:
     def __init__(self, endpoint_url):
         self.api_key = os.getenv("RUNPOD_API")
         self.url = f"https://api.runpod.ai/v2/{endpoint_url}/runsync"
+
+    def run(self, payload):
+        headers = {
+            "accept": "application/json",
+            "content-type": "application/json",
+            "authorization": self.api_key
+        }
+        response = requests.post(self.url, json=payload, headers=headers)
+        return response
+
+class RunPodServerlessEndpointASync:
+    def __init__(self, endpoint_url):
+        self.api_key = os.getenv("RUNPOD_API")
+        self.url = f"https://api.runpod.ai/v2/{endpoint_url}/run"
 
     def run(self, payload):
         headers = {
@@ -31,7 +45,7 @@ def clean_lyrics(lyrics):
     client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
 
     response = client.chat.completions.create(
-    model="gpt-3.5-turbo",
+    model="gpt-4-0125-preview",
     messages=[
         {
         "role": "system",
@@ -42,14 +56,14 @@ def clean_lyrics(lyrics):
         "content": lyrics
         }
     ],
-    temperature=0.04,
-    max_tokens=256,
+    temperature=0.001,
+    max_tokens=4096,
     top_p=1,
     frequency_penalty=0,
     presence_penalty=0
     )
 
-    return response['choices'][0]['message']['content']
+    return response.choices[0].message.content
 
 def youtube2mp3 (url,outdir):
 
@@ -75,7 +89,7 @@ def lyrics_extractor(song_name,outdir):
     extract_lyrics = SongLyrics(os.environ.get('GCS_API_KEY'), os.environ.get('GCS_ENGINE_ID'))
     data = extract_lyrics.get_lyrics(song_name)
     data = data['lyrics']
-    data = clean_lyrics(data)
+    # data = clean_lyrics(data)
     print(data)
     with open(f'{outdir}/lyrics.txt', 'w') as f:
         f.write(data)
@@ -83,7 +97,6 @@ def lyrics_extractor(song_name,outdir):
     return data
 
 def lambda_handler(event, context):
-    random_number = random.randint(1, 100)
     output_dir = "/tmp"
     from youtubesearchpython import VideosSearch
 
@@ -98,6 +111,8 @@ def lambda_handler(event, context):
     # print("Extracting lyrics")
     real_lyrics = lyrics_extractor(song_name, output_dir)
     
+    print("SONG NAME: ", song_name)
+    
     payload = {
         "input": {
             "song_name": song_name,
@@ -105,12 +120,12 @@ def lambda_handler(event, context):
     }
 
     print("Splitting audio")
-    spleeter_endpoint = RunPodServerlessEndpoint(os.environ.get("SPLEETER_ENDPOINT_ID"))
+    spleeter_endpoint = RunPodServerlessEndpointSync(os.environ.get("SPLEETER_ENDPOINT_ID"))
     spleeter_response = spleeter_endpoint.run(payload)
     print(spleeter_response)
 
     print("Vocals to text")
-    whisper_endpoint = RunPodServerlessEndpoint(os.environ.get("WHISPER_ENDPOINT_ID"))
+    whisper_endpoint = RunPodServerlessEndpointASync(os.environ.get("WHISPER_ENDPOINT_ID"))
     whipser_response = whisper_endpoint.run(payload)
     # {
     #     "delayTime": 67838,
@@ -120,11 +135,9 @@ def lambda_handler(event, context):
     #     "status": "COMPLETED"
     # }
     # print(whipser_response["id"],spleeter_response["id"])
+    # s3.download_file('auto-karaoke', f'{song_name}/timestamps.json', 'timestamps.json')
 
-    return {
-        "whisper_id": whipser_response["id"],
-        "spleeter_id": spleeter_response["id"]
-    }
+    return whipser_response
 
 if __name__ == "__main__":
     # load test.json
