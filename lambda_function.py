@@ -15,7 +15,7 @@ s3 = boto3.client('s3', aws_access_key_id=os.environ.get('AWS_S3_ACCESS_ID'), aw
 class RunPodServerlessEndpoint:
     def __init__(self, endpoint_url):
         self.api_key = os.getenv("RUNPOD_API")
-        self.url = f"https://api.runpod.ai/v2/{endpoint_url}/run"
+        self.url = f"https://api.runpod.ai/v2/{endpoint_url}/runsync"
 
     def run(self, payload):
         headers = {
@@ -39,7 +39,7 @@ def clean_lyrics(lyrics):
         },
         {
         "role": "user",
-        "content": ""
+        "content": lyrics
         }
     ],
     temperature=0.04,
@@ -75,7 +75,8 @@ def lyrics_extractor(song_name,outdir):
     extract_lyrics = SongLyrics(os.environ.get('GCS_API_KEY'), os.environ.get('GCS_ENGINE_ID'))
     data = extract_lyrics.get_lyrics(song_name)
     data = data['lyrics']
-
+    data = clean_lyrics(data)
+    print(data)
     with open(f'{outdir}/lyrics.txt', 'w') as f:
         f.write(data)
     s3.upload_file(f'{outdir}/lyrics.txt', 'auto-karaoke', f'{song_name}/lyrics.txt')
