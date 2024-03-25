@@ -2,6 +2,7 @@ import json
 import random
 import os
 from pathlib import Path
+import re
 from dotenv import load_dotenv
 from pytube import YouTube
 from lyrics_extractor import SongLyrics
@@ -41,29 +42,11 @@ class RunPodServerlessEndpointASync:
         return response
 
 def clean_lyrics(lyrics):
-    from openai import OpenAI
-    client = OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+    # remove everything in between [ and ] using regex
+    lyrics = re.sub(r"\[.*?\]", "", lyrics)
+    return lyrics
 
-    response = client.chat.completions.create(
-    model="gpt-4-0125-preview",
-    messages=[
-        {
-        "role": "system",
-        "content": "Your task is to remove unnecessary words and just output the clean lyrics of the song. OUTPUT ONLY THE LYRICS AND NOTHING ELSE."
-        },
-        {
-        "role": "user",
-        "content": lyrics
-        }
-    ],
-    temperature=0.001,
-    max_tokens=4096,
-    top_p=1,
-    frequency_penalty=0,
-    presence_penalty=0
-    )
 
-    return response.choices[0].message.content
 
 def youtube2mp3 (url,outdir):
 
@@ -89,7 +72,7 @@ def lyrics_extractor(song_name,outdir):
     extract_lyrics = SongLyrics(os.environ.get('GCS_API_KEY'), os.environ.get('GCS_ENGINE_ID'))
     data = extract_lyrics.get_lyrics(song_name)
     data = data['lyrics']
-    # data = clean_lyrics(data)
+    data = clean_lyrics(data)
     print(data)
     with open(f'{outdir}/lyrics.txt', 'w') as f:
         f.write(data)
