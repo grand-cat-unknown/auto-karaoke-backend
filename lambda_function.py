@@ -26,6 +26,30 @@ class RunPodServerlessEndpoint:
         response = requests.post(self.url, json=payload, headers=headers)
         return response
 
+def clean_lyrics(lyrics):
+    from openai import OpenAI
+    client = OpenAI()
+
+    response = client.chat.completions.create(
+    model="gpt-3.5-turbo",
+    messages=[
+        {
+        "role": "system",
+        "content": "Your task is to remove unnecessary words and just output the clean lyrics of the song. OUTPUT ONLY THE LYRICS AND NOTHING ELSE."
+        },
+        {
+        "role": "user",
+        "content": ""
+        }
+    ],
+    temperature=0.04,
+    max_tokens=256,
+    top_p=1,
+    frequency_penalty=0,
+    presence_penalty=0
+    )
+
+    return response['choices'][0]['message']['content']
 
 def youtube2mp3 (url,outdir):
 
@@ -46,10 +70,15 @@ def youtube2mp3 (url,outdir):
 
     return song_name
 
-def lyrics_extractor(song_name):
+def lyrics_extractor(song_name,outdir):
     print(f"Extracting lyrics for {song_name}")
     extract_lyrics = SongLyrics(os.environ.get('GCS_API_KEY'), os.environ.get('GCS_ENGINE_ID'))
     data = extract_lyrics.get_lyrics(song_name)
+    data = data['lyrics']
+
+    with open(f'{outdir}/lyrics.txt', 'w') as f:
+        f.write(data)
+    s3.upload_file(f'{outdir}/lyrics.txt', 'auto-karaoke', f'{song_name}/lyrics.txt')
     return data
 
 def lambda_handler(event, context):
@@ -66,7 +95,7 @@ def lambda_handler(event, context):
     song_name = youtube2mp3(url,output_dir)
 
     # print("Extracting lyrics")
-    lyrics = lyrics_extractor(song_name)
+    real_lyrics = lyrics_extractor(song_name, output_dir)
     
     payload = {
         "input": {
