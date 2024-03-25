@@ -111,9 +111,19 @@ def lambda_handler(event, context):
     print("Vocals to text")
     whisper_endpoint = RunPodServerlessEndpoint(os.environ.get("WHISPER_ENDPOINT_ID"))
     whipser_response = whisper_endpoint.run(payload)
-    print(whipser_response)
+    # {
+    #     "delayTime": 67838,
+    #     "executionTime": 16003,
+    #     "id": "2e2e1d8b-61cf-4096-bf9a-56d57ca17194-e1",
+    #     "output": "DONE!",
+    #     "status": "COMPLETED"
+    # }
+    # print(whipser_response["id"],spleeter_response["id"])
 
-    return {"title": "HOLA  " + song_name}
+    return {
+        "whisper_id": whipser_response["id"],
+        "spleeter_id": spleeter_response["id"]
+    }
 
 if __name__ == "__main__":
     # load test.json
