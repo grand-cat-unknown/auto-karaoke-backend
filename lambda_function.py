@@ -122,9 +122,9 @@ def lambda_handler(event, context):
 
     return whipser_response
 
-if __name__ == "__main__":
-    # load test.json
-    with open('test.json') as f:
-        json_file = json.load(f)
-    lambda_handler(json_file, None)
+# if __name__ == "__main__":
+#     # load test.json
+#     with open('test.json') as f:
+#         json_file = json.load(f)
+#     lambda_handler(json_file, None)
 
