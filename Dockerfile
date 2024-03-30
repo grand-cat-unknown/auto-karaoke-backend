@@ -15,4 +15,4 @@ RUN pip install -r requirements.txt
 RUN pip install lxml -t /app
 
 # Command to run your Lambda function
-CMD ["python", "lambda_function.py"]
+CMD ["lambda_function.lambda_handler"]
